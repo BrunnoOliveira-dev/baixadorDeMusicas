@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Baixador de Música YouTube / Spotify</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 12px 15px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #2575fc;
+            box-shadow: 0 0 8px rgba(37, 117, 252, 0.3);
+        }
+
+        button {
+            padding: 12px 0;
+            font-size: 1.1rem;
+            background-color: #2575fc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #1a5ed8;
+        }
+
+        #status {
+            padding: 12px;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+            color: #333;
+            font-weight: 500;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .in-progress {
+            background-color: #ffc107; /* amarelo */
+        }
+
+        .success {
+            background-color: #28a745; /* verde */
+        }
+
+        .error {
+            background-color: #dc3545; /* vermelho */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Baixador de Música YouTube / Spotify</h1>
+        <form method="post">
+            <input type="text" name="link" placeholder="Cole o link do YouTube ou Spotify aqui" required>
+        </form>
+        <p id="status">O download será iniciado em segundo plano.</p>
+        <div id="download" style="margin-top:12px; display:none;"></div>
+    </div>
+
+    <script>
+        function atualizarStatus() {
+            fetch("/progress")
+                .then(res => res.json())
+                .then(data => {
+                    const status = document.getElementById("status");
+                    const dl = document.getElementById("download");
+                    status.innerText = data.message || "";
+                    status.classList.remove("success", "error", "in-progress");
+                    if (data.status === "success") {
+                        status.classList.add("success");
+                        if (data.download_url) {
+                            dl.style.display = 'block';
+                            dl.innerHTML = `<a id="zipLink" href="${data.download_url}" class="btn">Baixar ZIP</a>`;
+                            if (!window.__zipOpened) {
+                                window.__zipOpened = true;
+                                window.location.href = data.download_url;
+                            }
+                        }
+                    } else if (data.status === "error") {
+                        status.classList.add("error");
+                        dl.style.display = 'none';
+                        dl.innerHTML = '';
+                    } else if (data.status === "in-progress") {
+                        status.classList.add("in-progress");
+                        dl.style.display = 'none';
+                        dl.innerHTML = '';
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // Atualiza o status a cada 1 segundo
+        setInterval(atualizarStatus, 1000);
+    </script>
+</body>
+</html>
